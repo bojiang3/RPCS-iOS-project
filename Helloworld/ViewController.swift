@@ -4,20 +4,29 @@
 
 import UIKit
 import MapKit
+import CoreLocation
+import CoreLocationUI
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, CLLocationManagerDelegate {
 
     var notification = false
 
     @IBOutlet var mapView: MKMapView!
+    
+    let locationManager = CLLocationManager()
+//    let mapView = MKMapView()
+     
     override func viewDidLoad() {
         
         super.viewDidLoad()
+        view.addSubview(mapView)
+        mapView.frame = CGRect(x: 20, y: 50, width: view.frame.self.width-40, height: view.frame.size.height-100)
+        locationManager.delegate = self
         mapView.delegate = self
         getDirections()
         getDirections2()
-        
-        
+        createButton()
+
         
         
         let button = UIButton(frame: CGRect(x: 140,
@@ -64,6 +73,43 @@ class ViewController: UIViewController {
 
         
 
+    }
+    
+    private func createButton() {
+        let button = CLLocationButton(frame: CGRect(x: 0, y: 0, width: 200, height: 50))
+        button.center = CGPoint(x: view.center.x, y: view.frame.size.height-70)
+        button.cornerRadius = 12
+        button.icon = .arrowOutline
+        view.addSubview(button)
+        button.addTarget(self, action: #selector(didTapButton), for: .touchUpInside)
+    }
+    
+    @objc func didTapButton() {
+        locationManager.startUpdatingLocation()
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.first else {return}
+        self.locationManager.stopUpdatingLocation()
+        mapView.setRegion(MKCoordinateRegion(center: location.coordinate, span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)), animated: true)
+    }
+    
+    func setupLocationManager(){
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+    }
+    
+    // ask for permition for location
+    func checkLocationServices() {
+        if CLLocationManager.locationServicesEnabled() {
+            setupLocationManager()
+        } else {
+            // show alert letting the user kow they have to turn on
+        }
+    }
+    
+    func checkLocationAuthorization() {
+        
     }
     
     @objc
@@ -161,5 +207,13 @@ extension ViewController: MKMapViewDelegate {
     }
 
 }
-    
+
+//extension ViewController: CLLocationManagerDelegate {
+//    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+//    //
+//    }
+//    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+//        //
+//    }
+//}
 
