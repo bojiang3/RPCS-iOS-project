@@ -84,6 +84,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         mapView.delegate = self
         getDirections()
         getDirections2()
+        checkDistance()
         createButton()
         createNotifyButton()
         createAnotions()
@@ -221,6 +222,63 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         }
 
     }
+    
+    func radians(_ number: Double) -> Double {
+            return number * .pi / 180
+        }
+        
+    func haversine_distance(origin : [Double] , destination : [Double]) -> Double{
+            let lat1 = origin[0]
+            let lon1 = origin[1]
+            let lat2 = destination[0]
+            let lon2 = destination[1]
+            let radius = 6371.0  // km
+            let dlat = radians(lat2 - lat1)
+            let dlon = radians(lon2 - lon1)
+            let a = sin(dlat / 2) * sin(dlat / 2) + cos(radians(lat1)) * cos( radians(lat2)) * sin(dlon / 2) * sin(dlon / 2)
+            let c = 2 * atan2(sqrt(a), sqrt(1 - a))
+            let d = radius * c
+            return d
+        }
+//cur : [Double], coordinate : [Double]
+    func checkDistance(){
+        //for coordinate in coordinates{
+            addThread(completion: {(success) in
+                if success{
+                    self.playMusic()
+                }
+            })
+    //    }
+    }
+    
+  
+    func addThread(completion: @escaping (Bool)-> Void){
+        DispatchQueue.global().asyncAfter(deadline: .now() + 2){
+            let cur = [60.445,-79.965]
+            let coordinate = [40.445,-79.965]
+            if (self.haversine_distance(origin : cur,destination : coordinate) <= 0.01){
+                print("true")
+                DispatchQueue.main.async {
+                    completion(true)
+                }
+            }
+            else{
+                DispatchQueue.main.async {
+                    completion(false)
+                }
+            }
+        }
+    }
+//    func checkDistance(cur : [Double], coordinates : [[Double]]){
+//        for coordinate in coordinates{
+//            if (haversine_distance(origin : cur,destination : coordinate)<0.01){
+//                playMusic()
+//            }
+//        }
+//    }
+    
+    
+    
 }
 
 extension ViewController: MKMapViewDelegate {
@@ -230,7 +288,6 @@ extension ViewController: MKMapViewDelegate {
         renderer.strokeColor = .red
         return renderer
     }
-
 }
 
 //extension ViewController: CLLocationManagerDelegate {
@@ -253,9 +310,9 @@ extension ViewController:AVAudioPlayerDelegate {
             debugPrint("audio can not found")
             return
         }
-           let  err = try? AVAudioSession.sharedInstance().setCategory(
-               AVAudioSession.Category.playback,
-               options: AVAudioSession.CategoryOptions.mixWithOthers
+        let  err = try? AVAudioSession.sharedInstance().setCategory(
+            AVAudioSession.Category.playback,
+            options: AVAudioSession.CategoryOptions.mixWithOthers
             )
             do {
                 try AVAudioSession.sharedInstance().setActive(true)
@@ -264,7 +321,7 @@ extension ViewController:AVAudioPlayerDelegate {
                 debugPrint(error)
             }
            player =  try? AVAudioPlayer(contentsOf: soundFileURL)
-            player?.delegate = self
+           player?.delegate = self
            player?.play()
         musicButton.setTitle("Playing", for: .normal)
         
